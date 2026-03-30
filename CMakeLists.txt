@@ -11,6 +11,7 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(FeatureSummary)
 
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(KF6 ${REQUIRED_KF_VERSION} REQUIRED COMPONENTS
     I18n
     TextEditor

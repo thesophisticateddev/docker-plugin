@@ -2,15 +2,13 @@
     "KPlugin": {
         "Authors": [
             {
-                "Email": "%{EMAIL}",
-                "Name": "%{AUTHOR}"
+                "Email": "salman.sc829@gmail.com",
+                "Name": "Salman Ahmed"
             }
         ],
-        "Description": "A KTextEditor plugin",
-        "Icon": "tool-text",
-        "Name": "docker-plugin",
-        "ServiceTypes": [
-            "KTextEditor/Plugin"
-        ]
+        "Category": "Editor",
+        "Description": "Manage Docker containers from Kate",
+        "Icon": "run-build",
+        "Name": "Docker Plugin"
     }
 }
