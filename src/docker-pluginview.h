@@ -16,6 +16,8 @@ class QLabel;
 class QPushButton;
 class QToolButton;
 class QTreeWidget;
+class QTreeWidgetItem;
+class QPoint;
 
 namespace KTextEditor {
 class MainWindow;
@@ -36,11 +38,18 @@ private Q_SLOTS:
     void onShowAllToggled(bool checked);
     void onAvailabilityChanged(DockerAvailability availability, const QString &errorMessage);
     void onContainersUpdated(const QList<ContainerInfo> &containers);
+    void onContextMenu(const QPoint &pos);
+    void onCommandFinished(const QString &action, const QString &containerId, bool success, const QString &output);
+    void onInspectResult(const QString &containerId, const QString &jsonText);
 
 private:
     void setupToolView(DockerPlugin *plugin, KTextEditor::MainWindow *mainwindow);
     void setStatusText(const QString &text, bool isError = false);
 
+    QString containerIdFromItem(QTreeWidgetItem *item) const;
+
+    bool m_inspectOpenAsJson = false;
+    KTextEditor::MainWindow *m_mainWindow = nullptr;
     QWidget *m_toolView = nullptr;
     QLabel *m_statusLabel = nullptr;
     QPushButton *m_refreshBtn = nullptr;

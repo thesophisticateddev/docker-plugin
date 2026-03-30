@@ -40,12 +40,19 @@ public:
 
     void checkAvailability();
     void listContainers(bool showAll = false);
+    void startContainer(const QString &containerId);
+    void stopContainer(const QString &containerId);
+    void removeContainer(const QString &containerId);
+    void inspectContainer(const QString &containerId);
 
 Q_SIGNALS:
     void availabilityChanged(DockerAvailability availability, const QString &errorMessage);
     void containersUpdated(const QList<ContainerInfo> &containers);
+    void commandFinished(const QString &action, const QString &containerId, bool success, const QString &output);
+    void inspectResult(const QString &containerId, const QString &jsonText);
 
 private:
+    void runContainerCommand(const QString &action, const QString &containerId, const QStringList &args);
     DockerAvailability classifyError(const QString &stdErr) const;
     QList<ContainerInfo> parseContainerOutput(const QByteArray &data) const;
 };

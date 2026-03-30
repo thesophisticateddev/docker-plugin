@@ -9,8 +9,12 @@
 #include <QProcess>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLoggingCategory>
 
 #include <KLocalizedString>
+
+Q_DECLARE_LOGGING_CATEGORY(DOCKER_PLUGIN)
+Q_LOGGING_CATEGORY(DOCKER_PLUGIN_CLIENT, "docker-plugin.client")
 
 DockerClient::DockerClient(QObject *parent)
     : QObject(parent)
@@ -23,6 +27,7 @@ DockerClient::~DockerClient()
 
 void DockerClient::checkAvailability()
 {
+    qCDebug(DOCKER_PLUGIN_CLIENT) << "Checking Docker availability...";
     auto *proc = new QProcess(this);
     proc->setProgram(QStringLiteral("docker"));
     proc->setArguments({QStringLiteral("info"),
@@ -35,9 +40,12 @@ void DockerClient::checkAvailability()
                 proc->deleteLater();
 
                 if (exitCode == 0) {
+                    qCDebug(DOCKER_PLUGIN_CLIENT) << "Docker is available";
                     Q_EMIT availabilityChanged(DockerAvailability::Available, QString());
                 } else {
                     const DockerAvailability av = classifyError(stdErr);
+                    qCWarning(DOCKER_PLUGIN_CLIENT) << "Docker check failed, exit code:" << exitCode
+                                                     << "stderr:" << stdErr.trimmed();
                     Q_EMIT availabilityChanged(av, stdErr.trimmed());
                 }
             });
@@ -94,6 +102,81 @@ void DockerClient::listContainers(bool showAll)
     proc->start();
 }
 
+void DockerClient::startContainer(const QString &containerId)
+{
+    runContainerCommand(QStringLiteral("start"), containerId,
+                        {QStringLiteral("start"), containerId});
+}
+
+void DockerClient::stopContainer(const QString &containerId)
+{
+    runContainerCommand(QStringLiteral("stop"), containerId,
+                        {QStringLiteral("stop"), containerId});
+}
+
+void DockerClient::removeContainer(const QString &containerId)
+{
+    runContainerCommand(QStringLiteral("remove"), containerId,
+                        {QStringLiteral("rm"), containerId});
+}
+
+void DockerClient::inspectContainer(const QString &containerId)
+{
+    qCDebug(DOCKER_PLUGIN_CLIENT) << "Inspecting container:" << containerId;
+    auto *proc = new QProcess(this);
+    proc->setProgram(QStringLiteral("docker"));
+    proc->setArguments({QStringLiteral("inspect"), containerId});
+
+    connect(proc, &QProcess::finished, this,
+            [this, proc, containerId](int exitCode, QProcess::ExitStatus /*exitStatus*/) {
+                const QString stdOut = QString::fromUtf8(proc->readAllStandardOutput());
+                const QString stdErr = QString::fromUtf8(proc->readAllStandardError());
+                proc->deleteLater();
+
+                if (exitCode == 0) {
+                    Q_EMIT inspectResult(containerId, stdOut);
+                } else {
+                    Q_EMIT commandFinished(QStringLiteral("inspect"), containerId, false, stdErr.trimmed());
+                }
+            });
+
+    connect(proc, &QProcess::errorOccurred, this,
+            [this, proc, containerId](QProcess::ProcessError /*error*/) {
+                proc->deleteLater();
+                Q_EMIT commandFinished(QStringLiteral("inspect"), containerId, false,
+                                       i18n("Failed to run 'docker inspect'"));
+            });
+
+    proc->start();
+}
+
+void DockerClient::runContainerCommand(const QString &action, const QString &containerId,
+                                        const QStringList &args)
+{
+    auto *proc = new QProcess(this);
+    proc->setProgram(QStringLiteral("docker"));
+    proc->setArguments(args);
+
+    connect(proc, &QProcess::finished, this,
+            [this, proc, action, containerId](int exitCode, QProcess::ExitStatus /*exitStatus*/) {
+                const QString stdOut = QString::fromUtf8(proc->readAllStandardOutput());
+                const QString stdErr = QString::fromUtf8(proc->readAllStandardError());
+                proc->deleteLater();
+
+                Q_EMIT commandFinished(action, containerId, exitCode == 0,
+                                       exitCode == 0 ? stdOut.trimmed() : stdErr.trimmed());
+            });
+
+    connect(proc, &QProcess::errorOccurred, this,
+            [this, proc, action, containerId](QProcess::ProcessError /*error*/) {
+                proc->deleteLater();
+                Q_EMIT commandFinished(action, containerId, false,
+                                       i18n("Failed to run 'docker %1'", action));
+            });
+
+    proc->start();
+}
+
 DockerAvailability DockerClient::classifyError(const QString &stdErr) const
 {
     if (stdErr.contains(QLatin1String("permission denied"), Qt::CaseInsensitive)) {
@@ -119,6 +202,8 @@ QList<ContainerInfo> DockerClient::parseContainerOutput(const QByteArray &data) 
         QJsonParseError parseError;
         const QJsonDocument doc = QJsonDocument::fromJson(line, &parseError);
         if (parseError.error != QJsonParseError::NoError || !doc.isObject()) {
+            qCWarning(DOCKER_PLUGIN_CLIENT) << "Failed to parse container JSON line:"
+                                             << parseError.errorString();
             continue;
         }
 
