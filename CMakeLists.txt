@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(docker-plugin)
+project(docker-plugin VERSION 0.1.0)
 
 set(REQUIRED_KF_VERSION "6.0.0")
 find_package(ECM ${REQUIRED_KF_VERSION} REQUIRED NO_MODULE)

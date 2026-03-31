@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-linux:
+    name: Build (Linux)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            extra-cmake-modules \
+            g++ \
+            gettext \
+            libkf6i18n-dev \
+            libkf6texteditor-dev \
+            qt6-base-dev
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Stage install
+        run: cmake --install build --prefix build/staging
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-plugin-linux-x86_64
+          path: build/staging/
+
+  build-windows:
+    name: Build (Windows, experimental)
+    runs-on: windows-latest
+    continue-on-error: true
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-extra-cmake-modules
+            mingw-w64-x86_64-ki18n
+            mingw-w64-x86_64-ktexteditor
+            mingw-w64-x86_64-qt6-base
+            make
+
+      - name: Configure
+        run: cmake -B build -G "MSYS Makefiles" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Stage install
+        run: cmake --install build --prefix build/staging
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-plugin-windows-x86_64
+          path: build/staging/

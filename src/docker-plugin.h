@@ -1,5 +1,5 @@
 /*
-    SPDX-FileCopyrightText: %{CURRENT_YEAR} %{AUTHOR} <%{EMAIL}>
+    SPDX-FileCopyrightText: 2026 Salman Ahmed <salman.sc829@gmail.com>
 
     SPDX-License-Identifier: LGPL-2.0-or-later
 */
