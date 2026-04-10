@@ -54,7 +54,7 @@ jobs:
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/KDE/craft/master/setup/install_craft.ps1" -OutFile install_craft.ps1
-          & .\install_craft.ps1 -Prefix C:\CraftRoot -NonInteractive
+          & .\install_craft.ps1 -root C:\CraftRoot -use-defaults
           C:\CraftRoot\craft\craftenv.ps1
           craft extra-cmake-modules ki18n ktexteditor
 
