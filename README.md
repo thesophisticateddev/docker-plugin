@@ -162,4 +162,4 @@ kate --startanon
 
 ## License
 
-LGPL-2.0-or-later. See [LICENSES/](LICENSES/) for details.
+Apache-2.0-or-later. See [LICENSES/](LICENSES/) for details.

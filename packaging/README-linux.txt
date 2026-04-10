@@ -40,4 +40,4 @@ If Docker errors appear in the plugin panel, verify Docker is working:
    docker info
    docker ps
 
-License: LGPL-2.0-or-later
+License: Apache-2.0-or-later

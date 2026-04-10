@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-KTextEditor/Kate plugin for Docker integration. Built as a KDE Framework 6 plugin using C++/Qt. Licensed under LGPL-2.0-or-later.
+KTextEditor/Kate plugin for Docker integration. Built as a KDE Framework 6 plugin using C++/Qt. Licensed under Apache-2.0-or-later.
 
 ## Build Commands
 
