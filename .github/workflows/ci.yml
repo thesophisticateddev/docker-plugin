@@ -10,16 +10,12 @@ jobs:
   build-linux:
     name: Build (Linux)
     runs-on: ubuntu-24.04
-    container:
-      image: kdeneon/plasma:unstable
-      options: --user 0
     steps:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get dist-upgrade -y
           sudo apt-get install -y --no-install-recommends \
             cmake \
             extra-cmake-modules \
@@ -48,33 +44,35 @@ jobs:
     name: Build (Windows, experimental)
     runs-on: windows-latest
     continue-on-error: true
-    defaults:
-      run:
-        shell: msys2 {0}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: >-
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-extra-cmake-modules
-            mingw-w64-x86_64-ki18n
-            mingw-w64-x86_64-ktexteditor
-            mingw-w64-x86_64-qt6-base
-            make
+      - name: Install Craft and KF6 dependencies
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/KDE/craft/master/setup/install_craft.ps1" -OutFile install_craft.ps1
+          & .\install_craft.ps1 --prefix C:\CraftRoot --non-interactive
+          C:\CraftRoot\craft\craftenv.ps1
+          craft extra-cmake-modules ki18n ktexteditor
 
       - name: Configure
-        run: cmake -B build -G "MSYS Makefiles" -DCMAKE_BUILD_TYPE=Release
+        shell: pwsh
+        run: |
+          C:\CraftRoot\craft\craftenv.ps1
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=C:\CraftRoot
 
       - name: Build
-        run: cmake --build build --parallel
+        shell: pwsh
+        run: |
+          C:\CraftRoot\craft\craftenv.ps1
+          cmake --build build --parallel
 
       - name: Stage install
-        run: cmake --install build --prefix build/staging
+        shell: pwsh
+        run: |
+          C:\CraftRoot\craft\craftenv.ps1
+          cmake --install build --prefix build/staging
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
