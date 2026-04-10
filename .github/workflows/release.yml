@@ -24,6 +24,7 @@ jobs:
             extra-cmake-modules \
             g++ \
             gettext \
+            make \
             libkf6i18n-dev \
             libkf6texteditor-dev \
             qt6-base-dev
@@ -68,7 +69,7 @@ jobs:
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/KDE/craft/master/setup/install_craft.ps1" -OutFile install_craft.ps1
-          & .\install_craft.ps1 --prefix C:\CraftRoot --non-interactive
+          & .\install_craft.ps1 -Prefix C:\CraftRoot -NonInteractive
           C:\CraftRoot\craft\craftenv.ps1
           craft extra-cmake-modules ki18n ktexteditor
 
