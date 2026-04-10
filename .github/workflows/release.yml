@@ -70,46 +70,32 @@ jobs:
           Set-ExecutionPolicy Bypass -Scope Process -Force
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/KDE/craft/master/setup/install_craft.ps1" -OutFile install_craft.ps1
           & .\install_craft.ps1 -root C:\CraftRoot -use-defaults
-          C:\CraftRoot\craft\craftenv.ps1
+          . C:\CraftRoot\craft\craftenv.ps1
           craft extra-cmake-modules ki18n ktexteditor
 
       - name: Configure
         shell: pwsh
         run: |
-          C:\CraftRoot\craft\craftenv.ps1
+          . C:\CraftRoot\craft\craftenv.ps1
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=C:\CraftRoot
 
       - name: Build
         shell: pwsh
         run: |
-          C:\CraftRoot\craft\craftenv.ps1
+          . C:\CraftRoot\craft\craftenv.ps1
           cmake --build build --parallel
 
-      - name: Stage artifact
+      - name: Stage install
         shell: pwsh
         run: |
-          C:\CraftRoot\craft\craftenv.ps1
-          cmake --install build --prefix staging
-          Copy-Item packaging/README-windows.txt staging/README.txt
-          Copy-Item -Recurse LICENSES staging/LICENSES
-
-      - name: Create archive
-        shell: pwsh
-        run: |
-          $VERSION = $env:GITHUB_REF_NAME
-          Compress-Archive -Path staging\* -DestinationPath "docker-plugin-${VERSION}-windows-x86_64.zip"
-
-      - name: Generate checksum
-        run: sha256sum docker-plugin-*-windows-*.zip > checksums-windows.txt
+          . C:\CraftRoot\craft\craftenv.ps1
+          cmake --install build --prefix build/staging
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-windows
-          path: |
-            docker-plugin-*-windows-*.zip
-            checksums-windows.txt
-
+          name: docker-plugin-windows-x86_64
+          path: build/staging/
   publish:
     name: Publish Release
     needs: [build-linux]
